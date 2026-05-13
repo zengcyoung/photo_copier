@@ -4,6 +4,7 @@ class FileItem {
   final int size; // bytes
   final DateTime modifiedAt;
   final String extension; // lowercase, no dot e.g. "jpg"
+  final bool isDirectory;
 
   const FileItem({
     required this.path,
@@ -11,6 +12,7 @@ class FileItem {
     required this.size,
     required this.modifiedAt,
     required this.extension,
+    this.isDirectory = false,
   });
 
   double get sizeMiB => size / (1024 * 1024);

@@ -4,41 +4,53 @@ import '../models/file_item.dart';
 import '../models/file_filter.dart';
 
 class FileService {
-  /// List all files in [dirPath] that match [filter].
-  /// If [dirPath] is empty or doesn't exist, returns empty list.
+  /// List directories and files in [dirPath]. Directories are always shown
+  /// first; filters apply only to files.
   Future<List<FileItem>> listFiles(String dirPath, FileFilter filter) async {
     final dir = Directory(dirPath);
     if (!dir.existsSync()) return [];
 
-    final items = <FileItem>[];
+    final dirs = <FileItem>[];
+    final files = <FileItem>[];
     try {
       await for (final entity in dir.list(recursive: false)) {
-        if (entity is! File) continue;
         final stat = entity.statSync();
         final name = p.basename(entity.path);
-        final ext = p.extension(name).toLowerCase().replaceFirst('.', '');
-        if (ext.isEmpty) continue;
+        // Skip hidden entries
+        if (name.startsWith('.')) continue;
 
-        final item = FileItem(
-          path: entity.path,
-          name: name,
-          size: stat.size,
-          modifiedAt: stat.modified,
-          extension: ext,
-        );
-        if (_matchesFilter(item, filter)) {
-          items.add(item);
+        if (entity is Directory) {
+          dirs.add(FileItem(
+            path: entity.path,
+            name: name,
+            size: 0,
+            modifiedAt: stat.modified,
+            extension: '',
+            isDirectory: true,
+          ));
+        } else if (entity is File) {
+          final ext = p.extension(name).toLowerCase().replaceFirst('.', '');
+          if (ext.isEmpty) continue;
+          final item = FileItem(
+            path: entity.path,
+            name: name,
+            size: stat.size,
+            modifiedAt: stat.modified,
+            extension: ext,
+          );
+          if (_matchesFilter(item, filter)) files.add(item);
         }
       }
     } catch (_) {
       // Permission denied or unmounted — return what we have
     }
 
-    items.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
-    return items;
+    dirs.sort((a, b) => a.name.compareTo(b.name));
+    files.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
+    return [...dirs, ...files];
   }
 
-  /// Aggregate all unique extensions from a directory (for filter chips).
+  /// Aggregate all unique extensions from files in a directory (for filter chips).
   Future<Set<String>> aggregateExtensions(String dirPath) async {
     final dir = Directory(dirPath);
     if (!dir.existsSync()) return {};

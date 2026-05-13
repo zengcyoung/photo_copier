@@ -1,5 +1,8 @@
 name: Build & Release APK
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
@@ -61,7 +64,7 @@ jobs:
           name: "Photo Copier ${{ steps.tag.outputs.name }}"
           draft: false
           prerelease: false
-          generate_release_notes: true
+          generate_release_notes: false
           files: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab

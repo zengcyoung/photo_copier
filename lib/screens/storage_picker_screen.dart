@@ -31,11 +31,6 @@ class _StoragePickerScreenState extends ConsumerState<StoragePickerScreen> {
     try {
       final volumes = await _storageService.getVolumes();
       if (!mounted) return;
-      if (volumes.length == 1) {
-        // Skip picker if only one volume
-        _openVolume(volumes.first);
-        return;
-      }
       setState(() {
         _volumes = volumes;
         _loading = false;

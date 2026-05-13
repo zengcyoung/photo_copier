@@ -32,6 +32,19 @@ class _FileListScreenState extends ConsumerState<FileListScreen> {
     });
   }
 
+  void _onItemTap(FileItem item) {
+    if (item.isDirectory) {
+      _clearSelection();
+      ref.read(fileListProvider.notifier).navigateInto(item.path);
+      return;
+    }
+    // file tap in non-multi mode: enter multi-select
+    setState(() {
+      _multiSelectMode = true;
+      _selected.add(item.path);
+    });
+  }
+
   void _toggleSelect(FileItem item) {
     setState(() {
       if (_selected.contains(item.path)) {
@@ -107,20 +120,46 @@ class _FileListScreenState extends ConsumerState<FileListScreen> {
     final state = ref.watch(fileListProvider);
     final prefs = ref.watch(prefsProvider).valueOrNull ?? const AppPrefs();
     final thumbnailEnabled = prefs.thumbnailEnabled;
+    final canGoUp = state.canGoUp;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _multiSelectMode
-            ? Text('${_selected.length} selected')
-            : Text(widget.volume.name),
-        leading: _multiSelectMode
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: _clearSelection,
-              )
-            : null,
-        actions: [
-          if (_multiSelectMode) ...[
+    return PopScope(
+      canPop: !canGoUp,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && canGoUp) {
+          ref.read(fileListProvider.notifier).navigateUp();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: _multiSelectMode
+              ? Text('${_selected.length} selected')
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.volume.name,
+                        style: const TextStyle(fontSize: 16)),
+                    if (canGoUp)
+                      Text(
+                        _relativePath(state.currentPath, widget.volume.path),
+                        style: const TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+          leading: _multiSelectMode
+              ? IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: _clearSelection,
+                )
+              : canGoUp
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () =>
+                          ref.read(fileListProvider.notifier).navigateUp(),
+                    )
+                  : null,
+          actions: [
+            if (_multiSelectMode) ...[
             IconButton(
               icon: const Icon(Icons.select_all),
               tooltip: 'Select all',
@@ -181,7 +220,24 @@ class _FileListScreenState extends ConsumerState<FileListScreen> {
               label: Text('Copy ${_selected.length} items'),
             )
           : null,
+      ),
     );
+  }
+
+  String _relativePath(String current, String root) {
+    if (current.startsWith(root)) {
+      final rel = current.substring(root.length);
+      return rel.isEmpty ? '/' : rel;
+    }
+    return current;
+  }
+
+  String _itemCountLabel(List<FileItem> items) {
+    final dirs = items.where((i) => i.isDirectory).length;
+    final files = items.where((i) => !i.isDirectory).length;
+    if (dirs > 0 && files > 0) return '$dirs folders, $files files';
+    if (dirs > 0) return '$dirs folders';
+    return '$files files';
   }
 
   Widget _buildBody(FileListState state, bool thumbnailEnabled) {
@@ -236,7 +292,7 @@ class _FileListScreenState extends ConsumerState<FileListScreen> {
           child: Row(
             children: [
               Text(
-                '${state.files.length} files',
+                _itemCountLabel(state.files),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -251,21 +307,14 @@ class _FileListScreenState extends ConsumerState<FileListScreen> {
               return FileTile(
                 item: item,
                 selected: _selected.contains(item.path),
-                multiSelectMode: _multiSelectMode,
+                multiSelectMode: _multiSelectMode && !item.isDirectory,
                 showThumbnail: thumbnailEnabled,
-                onTap: _multiSelectMode
+                onTap: _multiSelectMode && !item.isDirectory
                     ? () => _toggleSelect(item)
-                    : () {
-                        if (_multiSelectMode) {
-                          _toggleSelect(item);
-                        }
-                        // single tap in non-multi mode: just select
-                        setState(() {
-                          _multiSelectMode = true;
-                          _selected.add(item.path);
-                        });
-                      },
-                onLongPress: () => _enterMultiSelect(item),
+                    : () => _onItemTap(item),
+                onLongPress: item.isDirectory
+                    ? null
+                    : () => _enterMultiSelect(item),
               );
             },
           ),

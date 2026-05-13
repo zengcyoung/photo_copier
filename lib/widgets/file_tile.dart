@@ -9,7 +9,7 @@ class FileTile extends StatelessWidget {
   final bool multiSelectMode;
   final bool showThumbnail;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   const FileTile({
     super.key,
@@ -23,6 +23,22 @@ class FileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (item.isDirectory) {
+      return ListTile(
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(Icons.folder, color: Colors.amber),
+        ),
+        title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      );
+    }
     return ListTile(
       leading: _buildLeading(context),
       title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),

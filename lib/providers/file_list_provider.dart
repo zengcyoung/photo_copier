@@ -5,6 +5,7 @@ import '../services/file_service.dart';
 
 class FileListState {
   final String currentPath;
+  final List<String> pathStack; // navigation history for back button
   final FileFilter filter;
   final List<FileItem> files;
   final Set<String> allExtensions;
@@ -13,6 +14,7 @@ class FileListState {
 
   const FileListState({
     this.currentPath = '',
+    this.pathStack = const [],
     this.filter = FileFilter.empty,
     this.files = const [],
     this.allExtensions = const {},
@@ -22,6 +24,7 @@ class FileListState {
 
   FileListState copyWith({
     String? currentPath,
+    List<String>? pathStack,
     FileFilter? filter,
     List<FileItem>? files,
     Set<String>? allExtensions,
@@ -30,12 +33,15 @@ class FileListState {
   }) =>
       FileListState(
         currentPath: currentPath ?? this.currentPath,
+        pathStack: pathStack ?? this.pathStack,
         filter: filter ?? this.filter,
         files: files ?? this.files,
         allExtensions: allExtensions ?? this.allExtensions,
         isLoading: isLoading ?? this.isLoading,
         error: error,
       );
+
+  bool get canGoUp => pathStack.isNotEmpty;
 }
 
 class FileListNotifier extends StateNotifier<FileListState> {
@@ -43,8 +49,15 @@ class FileListNotifier extends StateNotifier<FileListState> {
 
   FileListNotifier(this._service) : super(const FileListState());
 
-  Future<void> loadPath(String path) async {
-    state = state.copyWith(currentPath: path, isLoading: true, error: null);
+  Future<void> loadPath(String path, {bool pushHistory = false}) async {
+    final newStack = pushHistory
+        ? [...state.pathStack, state.currentPath]
+        : state.pathStack;
+    state = state.copyWith(
+        currentPath: path,
+        pathStack: newStack,
+        isLoading: true,
+        error: null);
     try {
       final exts = await _service.aggregateExtensions(path);
       final files = await _service.listFiles(path, state.filter);
@@ -56,6 +69,17 @@ class FileListNotifier extends StateNotifier<FileListState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
+  }
+
+  Future<void> navigateInto(String dirPath) =>
+      loadPath(dirPath, pushHistory: true);
+
+  Future<void> navigateUp() async {
+    if (!state.canGoUp) return;
+    final stack = List<String>.from(state.pathStack);
+    final parent = stack.removeLast();
+    state = state.copyWith(pathStack: stack);
+    await loadPath(parent);
   }
 
   Future<void> applyFilter(FileFilter filter) async {

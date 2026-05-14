@@ -30,7 +30,6 @@ class FileService {
           ));
         } else if (entity is File) {
           final ext = p.extension(name).toLowerCase().replaceFirst('.', '');
-          if (ext.isEmpty) continue;
           final item = FileItem(
             path: entity.path,
             name: name,

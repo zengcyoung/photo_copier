@@ -12,36 +12,32 @@ class FileService {
 
     final dirs = <FileItem>[];
     final files = <FileItem>[];
-    try {
-      await for (final entity in dir.list(recursive: false)) {
-        final stat = entity.statSync();
-        final name = p.basename(entity.path);
-        // Skip hidden entries
-        if (name.startsWith('.')) continue;
+    await for (final entity in dir.list(recursive: false)) {
+      final stat = entity.statSync();
+      final name = p.basename(entity.path);
+      // Skip hidden entries
+      if (name.startsWith('.')) continue;
 
-        if (entity is Directory) {
-          dirs.add(FileItem(
-            path: entity.path,
-            name: name,
-            size: 0,
-            modifiedAt: stat.modified,
-            extension: '',
-            isDirectory: true,
-          ));
-        } else if (entity is File) {
-          final ext = p.extension(name).toLowerCase().replaceFirst('.', '');
-          final item = FileItem(
-            path: entity.path,
-            name: name,
-            size: stat.size,
-            modifiedAt: stat.modified,
-            extension: ext,
-          );
-          if (_matchesFilter(item, filter)) files.add(item);
-        }
+      if (entity is Directory) {
+        dirs.add(FileItem(
+          path: entity.path,
+          name: name,
+          size: 0,
+          modifiedAt: stat.modified,
+          extension: '',
+          isDirectory: true,
+        ));
+      } else if (entity is File) {
+        final ext = p.extension(name).toLowerCase().replaceFirst('.', '');
+        final item = FileItem(
+          path: entity.path,
+          name: name,
+          size: stat.size,
+          modifiedAt: stat.modified,
+          extension: ext,
+        );
+        if (_matchesFilter(item, filter)) files.add(item);
       }
-    } catch (_) {
-      // Permission denied or unmounted — return what we have
     }
 
     dirs.sort((a, b) => a.name.compareTo(b.name));
@@ -54,13 +50,11 @@ class FileService {
     final dir = Directory(dirPath);
     if (!dir.existsSync()) return {};
     final exts = <String>{};
-    try {
-      await for (final entity in dir.list(recursive: false)) {
-        if (entity is! File) continue;
-        final ext = p.extension(entity.path).toLowerCase().replaceFirst('.', '');
-        if (ext.isNotEmpty) exts.add(ext);
-      }
-    } catch (_) {}
+    await for (final entity in dir.list(recursive: false)) {
+      if (entity is! File) continue;
+      final ext = p.extension(entity.path).toLowerCase().replaceFirst('.', '');
+      if (ext.isNotEmpty) exts.add(ext);
+    }
     return exts;
   }
 

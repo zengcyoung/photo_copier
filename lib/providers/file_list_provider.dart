@@ -17,7 +17,7 @@ class FileListState {
     this.pathStack = const [],
     this.filter = FileFilter.empty,
     this.files = const [],
-    this.allExtensions = const {},
+    this.allExtensions = FileItem.knownExtensions,
     this.isLoading = false,
     this.error,
   });
@@ -59,11 +59,10 @@ class FileListNotifier extends StateNotifier<FileListState> {
         isLoading: true,
         error: null);
     try {
-      final exts = await _service.aggregateExtensions(path);
       final files = await _service.listFiles(path, state.filter);
       state = state.copyWith(
         files: files,
-        allExtensions: exts,
+        allExtensions: FileItem.knownExtensions,
         isLoading: false,
       );
     } catch (e) {

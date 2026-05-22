@@ -45,19 +45,6 @@ class FileService {
     return [...dirs, ...files];
   }
 
-  /// Aggregate all unique extensions from files in a directory (for filter chips).
-  Future<Set<String>> aggregateExtensions(String dirPath) async {
-    final dir = Directory(dirPath);
-    if (!dir.existsSync()) return {};
-    final exts = <String>{};
-    await for (final entity in dir.list(recursive: false)) {
-      if (entity is! File) continue;
-      final ext = p.extension(entity.path).toLowerCase().replaceFirst('.', '');
-      if (ext.isNotEmpty) exts.add(ext);
-    }
-    return exts;
-  }
-
   bool _matchesFilter(FileItem item, FileFilter filter) {
     if (filter.dateFrom != null &&
         item.modifiedAt.isBefore(filter.dateFrom!)) {

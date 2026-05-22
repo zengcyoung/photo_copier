@@ -15,6 +15,12 @@ class FileItem {
     this.isDirectory = false,
   });
 
+  static const Set<String> knownExtensions = {
+    'jpg', 'jpeg', 'heic', 'heif', 'png', 'gif', 'webp', 'bmp',
+    'raw', 'arw', 'cr2', 'cr3', 'nef', 'orf', 'raf', 'dng', 'rw2',
+    'mp4', 'mov', 'avi', 'mkv', 'm4v', '3gp', 'mts', 'm2ts',
+  };
+
   double get sizeMiB => size / (1024 * 1024);
 
   bool get isImage => const {

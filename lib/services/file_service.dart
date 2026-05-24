@@ -1,11 +1,10 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/file_filter.dart';
 
 class FileService {
-  /// List directories and files in [dirPath]. Directories are always shown
-  /// first; filters apply only to files.
   Future<List<FileItem>> listFiles(String dirPath, FileFilter filter) async {
     final dir = Directory(dirPath);
     if (!dir.existsSync()) return [];
@@ -43,6 +42,18 @@ class FileService {
     dirs.sort((a, b) => a.name.compareTo(b.name));
     files.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
     return [...dirs, ...files];
+  }
+
+  int deleteFiles(List<String> paths) {
+    var deleted = 0;
+    for (final path in paths) {
+      final file = File(path);
+      if (!file.existsSync()) continue;
+      file.deleteSync();
+      debugPrint('[DEL] $path');
+      deleted++;
+    }
+    return deleted;
   }
 
   bool _matchesFilter(FileItem item, FileFilter filter) {

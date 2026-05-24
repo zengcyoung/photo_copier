@@ -83,6 +83,62 @@ class _FileListScreenState extends ConsumerState<FileListScreen> {
     });
   }
 
+  Future<void> _confirmDelete() async {
+    final count = _selected.length;
+    if (count == 0) return;
+
+    final first = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete files?'),
+        content: Text('$count file${count > 1 ? 's' : ''} will be deleted.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (first != true || !mounted) return;
+
+    final second = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete permanently?'),
+        content: Text(
+          'This action cannot be undone.\n'
+          '$count file${count > 1 ? 's' : ''} will be permanently deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep files'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete permanently'),
+          ),
+        ],
+      ),
+    );
+    if (second != true || !mounted) return;
+
+    _performDelete();
+  }
+
+  Future<void> _performDelete() async {
+    final paths = _selected.toList();
+    _clearSelection();
+    await ref.read(fileListProvider.notifier).deleteFiles(paths);
+  }
+
   void _openFilter(FileListState state) {
     showModalBottomSheet(
       context: context,
@@ -160,6 +216,11 @@ class _FileListScreenState extends ConsumerState<FileListScreen> {
                   : null,
           actions: [
             if (_multiSelectMode) ...[
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              tooltip: 'Delete',
+              onPressed: _confirmDelete,
+            ),
             IconButton(
               icon: const Icon(Icons.select_all),
               tooltip: 'Select all',

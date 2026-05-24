@@ -92,6 +92,12 @@ class FileListNotifier extends StateNotifier<FileListState> {
   }
 
   Future<void> refresh() => loadPath(state.currentPath);
+
+  Future<int> deleteFiles(List<String> paths) async {
+    final deleted = _service.deleteFiles(paths);
+    await refresh();
+    return deleted;
+  }
 }
 
 final fileServiceProvider = Provider((ref) => FileService());

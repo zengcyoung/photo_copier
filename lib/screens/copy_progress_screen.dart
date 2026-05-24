@@ -47,7 +47,6 @@ class _CopyProgressScreenState extends ConsumerState<CopyProgressScreen> {
   String _interruptReason = '';
   List<FileItem> _remaining = [];
 
-  // For conflict dialogs
   ConflictChoice? _globalConflict;
 
   StreamSubscription<CopyEvent>? _sub;
@@ -89,7 +88,6 @@ class _CopyProgressScreenState extends ConsumerState<CopyProgressScreen> {
       if (_destDir.isEmpty) return;
     }
 
-    // Ensure dest directory exists
     await Directory(_destDir).create(recursive: true);
 
     final session = CopySession(
@@ -267,21 +265,29 @@ class _CopyProgressScreenState extends ConsumerState<CopyProgressScreen> {
   }
 
   Widget _buildDone() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.check_circle, color: Colors.green, size: 64),
-        const SizedBox(height: 16),
-        Text('Done!', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 16),
-        Text('✅ $_succeeded  copied'),
-        if (_skipped > 0) Text('⏭ $_skipped  skipped'),
-        if (_failed > 0) Text('❌ $_failed  failed', style: const TextStyle(color: Colors.red)),
-        const SizedBox(height: 24),
-        FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done')),
-      ],
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.check_circle, color: Colors.green, size: 64),
+          const SizedBox(height: 16),
+          Text('Done!',
+              style: Theme.of(context).textTheme.headlineMedium,
+              textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          Text('✅ $_succeeded  copied', textAlign: TextAlign.center),
+          if (_skipped > 0)
+            Text('⏭ $_skipped  skipped', textAlign: TextAlign.center),
+          if (_failed > 0)
+            Text('❌ $_failed  failed',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center),
+          const SizedBox(height: 24),
+          FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Done')),
+        ],
+      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/file_filter.dart';
@@ -19,6 +20,7 @@ class FileService {
       if (name.startsWith('.')) continue;
 
       if (entity is Directory) {
+        debugPrint('[LIST] DIR  ${entity.path}');
         dirs.add(FileItem(
           path: entity.path,
           name: name,
@@ -29,6 +31,7 @@ class FileService {
         ));
       } else if (entity is File) {
         final ext = p.extension(name).toLowerCase().replaceFirst('.', '');
+        debugPrint('[LIST] FILE ${entity.path}  .$ext');
         final item = FileItem(
           path: entity.path,
           name: name,

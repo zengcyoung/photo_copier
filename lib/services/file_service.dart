@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/file_filter.dart';
@@ -50,7 +49,6 @@ class FileService {
       final file = File(path);
       if (!file.existsSync()) continue;
       file.deleteSync();
-      debugPrint('[DEL] $path');
       deleted++;
     }
     return deleted;

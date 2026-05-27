@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:file_picker/file_picker.dart';
 import '../models/file_item.dart';
 import '../models/copy_session.dart';
 import '../providers/history_provider.dart';
@@ -68,35 +69,16 @@ class _CopyProgressScreenState extends ConsumerState<CopyProgressScreen> {
   }
 
   Future<void> _selectDest() async {
-    // Use a simple TextEditingController dialog since file_picker isn't installed
-    final ctrl = TextEditingController(text: _destDir);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Destination directory'),
-        content: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration(
-            hintText: '/storage/emulated/0/DCIM/Imported',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, ctrl.text),
-              child: const Text('OK')),
-        ],
-      ),
+    final String? result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select destination directory',
+      initialDirectory: _destDir.isNotEmpty ? _destDir : null,
     );
-    if (result != null && result.isNotEmpty) {
-      setState(() {
-        _destDir = result;
-      });
-      await ref.read(prefsProvider.notifier).setLastDestDir(result);
-    }
+    if (result == null || result.isEmpty) return;
+
+    setState(() {
+      _destDir = result;
+    });
+    await ref.read(prefsProvider.notifier).setLastDestDir(result);
   }
 
   Future<void> _startCopy({List<FileItem>? files}) async {

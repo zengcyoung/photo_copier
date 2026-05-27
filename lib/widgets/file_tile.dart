@@ -1,7 +1,4 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
 import '../models/file_item.dart';
 import '../utils/format_utils.dart';
 
@@ -76,46 +73,8 @@ class _ThumbnailWidget extends StatefulWidget {
 }
 
 class _ThumbnailWidgetState extends State<_ThumbnailWidget> {
-  Uint8List? _thumb;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadThumbnail();
-  }
-
-  Future<void> _loadThumbnail() async {
-    try {
-      final PermissionState ps = await PhotoManager.requestPermissionExtend();
-      if (!ps.isAuth) return;
-
-      final AssetEntity? entity = await AssetEntity.fromFile(File(widget.item.path));
-      if (entity == null) return;
-
-      final Uint8List? data = await entity.thumbnailDataWithSize(
-        const ThumbnailSize(96, 96),
-        quality: 70,
-      );
-      if (!mounted || data == null) return;
-
-      setState(() {
-        _thumb = data;
-      });
-    } catch (_) {}
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_thumb != null) {
-      return SizedBox(
-        width: 48,
-        height: 48,
-        child: Image.memory(
-          _thumb!,
-          fit: BoxFit.cover,
-        ),
-      );
-    }
     return _ExtIcon(extension: widget.item.extension);
   }
 }

@@ -58,7 +58,8 @@ class _CopyProgressScreenState extends ConsumerState<CopyProgressScreen> {
     super.initState();
     _historyService = ref.read(historyServiceProvider);
     _copyService = CopyService(_historyService);
-    _destDir = widget.suggestedDestDir;
+    final last = ref.read(prefsProvider).value?.lastDestDir ?? '';
+    _destDir = last.isNotEmpty ? last : widget.suggestedDestDir;
     _total = widget.files.length;
   }
 

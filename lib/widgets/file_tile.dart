@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
 
 import '../models/file_item.dart';
 import '../utils/format_utils.dart';
@@ -68,50 +66,28 @@ class FileTile extends StatelessWidget {
   }
 }
 
-class _ThumbnailWidget extends StatefulWidget {
+class _ThumbnailWidget extends StatelessWidget {
   final FileItem item;
 
   const _ThumbnailWidget({required this.item});
 
   @override
-  State<_ThumbnailWidget> createState() => _ThumbnailWidgetState();
-}
-
-class _ThumbnailWidgetState extends State<_ThumbnailWidget> {
-  Uint8List? _thumb;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadThumbnail();
-  }
-
-  Future<void> _loadThumbnail() async {
-    try {
-      final permission = await PhotoManager.requestPermissionExtend();
-      if (!permission.isAuth) return;
-      final file = File(widget.item.path);
-      final entity = await AssetEntity.fromFile(file);
-      final thumb = await entity.thumbnailDataWithSize(
-        const ThumbnailSize(96, 96),
-        quality: 70,
-      );
-      if (mounted && thumb != null) {
-        setState(() => _thumb = thumb);
-      }
-    } catch (_) {}
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_thumb != null) {
-      return SizedBox(
-        width: 48,
-        height: 48,
-        child: Image.memory(_thumb!, fit: BoxFit.cover),
-      );
-    }
-    return _ExtIcon(extension: widget.item.extension);
+    final file = File(item.path);
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Image(
+        image: ResizeImage(
+          FileImage(file),
+          width: 96,
+          height: 96,
+        ),
+        fit: BoxFit.cover,
+        errorBuilder: (ctx, err, stack) =>
+            _ExtIcon(extension: item.extension),
+      ),
+    );
   }
 }
 

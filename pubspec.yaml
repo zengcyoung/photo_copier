@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  photo_manager: ^3.0.0
   file_picker: ^8.0.0
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.6.1
